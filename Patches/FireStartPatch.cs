@@ -3,6 +3,14 @@ using HarmonyLib;
 
 namespace FireImprovementsMod.Patches
 {
+    // Совместимость со Skill-Adjustment:
+    //   SkillAdj патчит SkillsManager.Awake — изменяет m_BaseSuccessChance[] и
+    //   m_StartPercentIncrease[] для каждого уровня навыка Firestarting.
+    //   Наш Postfix добавляет плоский бонус УЖЕ ПОСЛЕ того, как CalculateFireStartSuccess
+    //   посчитал результат с учётом изменённых SkillAdj значений.
+    //   Порядок: SkillAdj настраивает скилл → ванильный расчёт использует эти данные
+    //            → наш Postfix добавляет flat бонус сверху.
+    //   Эффект: bonuses stack additively — это желаемое поведение.
     /// <summary>
     /// Добавляет плоский бонус к шансу успешного розжига.
     ///
@@ -18,6 +26,8 @@ namespace FireImprovementsMod.Patches
     ///   FuelSourceItem  fuelItem          — топливо
     ///   FireStarterItem tinderItem        — трут (может быть null)
     /// </summary>
+    // [HarmonyAfter] не нужен: SkillAdj не патчит CalculateFireStartSuccess,
+    // поэтому конфликта порядка нет.
     [HarmonyPatch(typeof(FireManager), nameof(FireManager.CalculateFireStartSuccess))]
     internal class FireStartSuccessPatch
     {

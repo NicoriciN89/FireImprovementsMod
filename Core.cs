@@ -2,9 +2,10 @@ using MelonLoader;
 using Il2Cpp;
 using Il2CppTLD.Gameplay;
 using System;
+using System.Linq;
 
 // ===== Метаданные мода =====
-[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.0.0", "Marvin")]
+[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.0", "Marvin")]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 [assembly: MelonColor(255, 255, 120, 20)]  // Оранжевый — цвет огня
 
@@ -12,16 +13,23 @@ namespace FireImprovementsMod
 {
     internal sealed class Core : MelonMod
     {
-        public const string Version = "1.0.0";
+        public const string Version = "1.2.0";
         internal static MelonLogger.Instance Logger;
+
+        /// <summary>true если мод Skill-Adjustment загружен одновременно с нашим.</summary>
+        internal static bool SkillAdjustmentPresent { get; private set; } = false;
 
         public override void OnInitializeMelon()
         {
             Logger = LoggerInstance;
             Settings.OnLoad();
 
+            // Определяем, установлен ли мод Skill-Adjustment
+            SkillAdjustmentPresent = MelonMod.RegisteredMelons
+                .Any(m => m.Info.Name == "Skill-Adjustment");
+
             Logger.Msg(System.ConsoleColor.Yellow, "╔══════════════════════════════════════════╗");
-            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.0.0      ║");
+            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.2.0      ║");
             Logger.Msg(System.ConsoleColor.Yellow, "╚══════════════════════════════════════════╝");
             Logger.Msg($"  Топливо горит дольше x{Settings.instance.burnDurationMultiplier}");
             Logger.Msg($"  Макс. время горения: {Settings.instance.maxFireDurationHours}ч (было 12ч)");
@@ -29,6 +37,18 @@ namespace FireImprovementsMod
             Logger.Msg($"  Бонус к розжигу: +{Settings.instance.fireStartBonusPercent}%");
             Logger.Msg($"  Тепло в помещении: +{Settings.instance.indoorWarmthBonus}°C");
             Logger.Msg($"  Тепло на улице: +{Settings.instance.outdoorWarmthBonus}°C");
+
+            if (SkillAdjustmentPresent)
+            {
+                Logger.Msg(System.ConsoleColor.Cyan,
+                    "  [Совм.] Skill-Adjustment обнаружен.");
+                Logger.Msg(System.ConsoleColor.Cyan,
+                    "    • Бонус к розжигу (+" + Settings.instance.fireStartBonusPercent +
+                    "%) суммируется с базовыми шансами из Skill-Adjustment.");
+                Logger.Msg(System.ConsoleColor.Cyan,
+                    "    • Множитель горения топлива (x" + Settings.instance.burnDurationMultiplier +
+                    ") перемножается с бонусом длительности из Skill-Adjustment.");
+            }
         }
 
         /// <summary>

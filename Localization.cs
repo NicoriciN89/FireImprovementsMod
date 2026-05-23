@@ -26,45 +26,59 @@ namespace FireImprovementsMod
 
         internal static void Reload() => _data = null;
 
+        // Имя встроенного ресурса: {RootNamespace}.{filename}
+        private const string EmbeddedResourceName = "FireImprovementsMod.localization.json";
+
         private static Dictionary<string, Dictionary<string, string>> Load()
         {
-            // Bundled path: same folder as the DLL (e.g. Mods/localization.json)
-            string dllDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
-            string bundledPath = Path.Combine(dllDir, "localization.json");
-
-            // User override: UserData/FireImprovementsMod/localization.json
+            // 1. Пользовательский оверрайд: UserData/FireImprovementsMod/localization.json
+            string dllDir  = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
             string userPath = Path.Combine(
-                Path.GetDirectoryName(dllDir) ?? dllDir,  // go up from Mods/ to game root
+                Path.GetDirectoryName(dllDir) ?? dllDir,   // выходим из Mods/ в корень игры
                 "UserData", "FireImprovementsMod", "localization.json");
 
-            string filePath =
-                File.Exists(userPath)    ? userPath :
-                File.Exists(bundledPath) ? bundledPath :
-                string.Empty;
-
-            if (filePath != string.Empty)
+            if (File.Exists(userPath))
             {
-                try
+                var fromFile = TryLoadJson(File.ReadAllText(userPath, Encoding.UTF8));
+                if (fromFile != null)
                 {
-                    string json = File.ReadAllText(filePath, Encoding.UTF8);
-                    var result = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(json);
-                    if (result != null)
-                    {
-                        MelonLogger.Msg($"[FireImprovementsMod] Loaded localization from: {filePath}");
-                        return result;
-                    }
+                    MelonLogger.Msg($"[FireImprovementsMod] Localization override loaded from: {userPath}");
+                    return fromFile;
                 }
-                catch (Exception ex)
+            }
+
+            // 2. Встроенный ресурс внутри DLL
+            var asm    = Assembly.GetExecutingAssembly();
+            var stream = asm.GetManifestResourceStream(EmbeddedResourceName);
+            if (stream != null)
+            {
+                using var reader  = new StreamReader(stream, Encoding.UTF8);
+                var fromEmbedded  = TryLoadJson(reader.ReadToEnd());
+                if (fromEmbedded != null)
                 {
-                    MelonLogger.Warning($"[FireImprovementsMod] Could not load localization.json: {ex.Message}");
+                    MelonLogger.Msg("[FireImprovementsMod] Localization loaded from embedded resource.");
+                    return fromEmbedded;
                 }
             }
             else
             {
-                MelonLogger.Warning("[FireImprovementsMod] localization.json not found — using built-in English strings.");
+                MelonLogger.Warning($"[FireImprovementsMod] Embedded resource '{EmbeddedResourceName}' not found — using built-in English strings.");
             }
 
             return FallbackEnglish;
+        }
+
+        private static Dictionary<string, Dictionary<string, string>> TryLoadJson(string json)
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(json);
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Warning($"[FireImprovementsMod] Failed to parse localization JSON: {ex.Message}");
+                return null;
+            }
         }
 
         // Minimal English fallback so the mod works even without the JSON file.
