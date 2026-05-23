@@ -1,0 +1,20 @@
+﻿{
+  "English": {
+    "FI.SEC_DURATION": "Fuel Burn Duration",
+    "FI.SEC_WIND": "Wind Resistance",
+    "FI.SEC_FIRESTART": "Fire Starting",
+    "FI.SEC_WARMTH": "Fire Warmth",
+    "FI.DURATION_MULT": "Burn Duration Multiplier",
+    "FI.MAX_DURATION": "Max Fire Duration (hours)",
+    "FI.WIND_RESIST": "Wind Blowout Resistance (%)",
+    "FI.START_BONUS": "Fire Start Bonus (%)",
+    "FI.INDOOR_WARMTH": "Indoor Warmth Bonus (\u00b0C)",
+    "FI.OUTDOOR_WARMTH": "Outdoor Warmth Bonus (\u00b0C)",
+    "FI.DESC_DURATION_MULT": "Fuel burn time multiplier.\n1.0 = no change | 1.5 = 50% longer | 2.0 = twice as long.\nAffects all fuel: wood, coal, accelerant.",
+    "FI.DESC_MAX_DURATION": "Maximum possible fire burn time in hours.\n12 = vanilla (no change)\n24 = one day | 72 = three days | 120 = five days | 200 = eight days.",
+    "FI.DESC_WIND_RESIST": "Chance (%) that wind does NOT blow out the fire.\n0 = no protection (vanilla)\n50 = fire goes out half as often\n100 = wind never extinguishes fire.",
+    "FI.DESC_START_BONUS": "Flat bonus added to fire start success chance.\nAdded after all skill, tool and weather calculations.\n0 = no change | 15 = +15% to success.",
+    "FI.DESC_INDOOR_WARMTH": "Extra warmth from fire indoors (stoves, fireplaces).\n0 = no change | 5 = +5\u00b0C to minimum air temperature from fire.",
+    "FI.DESC_OUTDOOR_WARMTH": "Extra warmth from fire outdoors (campfires).\n0 = no change | 3 = +3\u00b0C to minimum air temperature from fire."
+  }
+}

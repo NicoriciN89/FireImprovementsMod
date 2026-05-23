@@ -4,19 +4,18 @@ using Il2CppTLD.Gameplay;
 using System;
 using System.Linq;
 
-// ===== Метаданные мода =====
-[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.1", "NnicolaeN")]
+[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.2", "NnicolaeN")]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
-[assembly: MelonColor(255, 255, 120, 20)]  // Оранжевый — цвет огня
+[assembly: MelonColor(255, 255, 120, 20)]  // orange — fire colour
 
 namespace FireImprovementsMod
 {
     internal sealed class Core : MelonMod
     {
-        public const string Version = "1.2.1";
+        public const string Version = "1.2.2";
         internal static MelonLogger.Instance Logger;
 
-        /// <summary>true если мод Skill-Adjustment загружен одновременно с нашим.</summary>
+        /// <summary>True if the Skill-Adjustment mod is loaded alongside ours.</summary>
         internal static bool SkillAdjustmentPresent { get; private set; } = false;
 
         public override void OnInitializeMelon()
@@ -24,43 +23,46 @@ namespace FireImprovementsMod
             Logger = LoggerInstance;
             Settings.OnLoad();
 
-            // Определяем, установлен ли мод Skill-Adjustment
+            // Detect whether Skill-Adjustment is installed
             SkillAdjustmentPresent = MelonMod.RegisteredMelons
                 .Any(m => m.Info.Name == "Skill-Adjustment");
 
             Logger.Msg(System.ConsoleColor.Yellow, "╔══════════════════════════════════════════╗");
-            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.2.1      ║");
+            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.2.2      ║");
             Logger.Msg(System.ConsoleColor.Yellow, "╚══════════════════════════════════════════╝");
-            Logger.Msg($"  Топливо горит дольше x{Settings.instance.burnDurationMultiplier}");
-            Logger.Msg($"  Макс. время горения: {Settings.instance.maxFireDurationHours}ч (было 12ч)");
-            Logger.Msg($"  Защита от ветра: {Settings.instance.windResistancePercent}%");
-            Logger.Msg($"  Бонус к розжигу: +{Settings.instance.fireStartBonusPercent}%");
-            Logger.Msg($"  Тепло в помещении: +{Settings.instance.indoorWarmthBonus}°C");
-            Logger.Msg($"  Тепло на улице: +{Settings.instance.outdoorWarmthBonus}°C");
+            Logger.Msg($"  Fuel burn multiplier  : x{Settings.instance.burnDurationMultiplier}");
+            Logger.Msg($"  Max fire duration     : {Settings.instance.maxFireDurationHours}h (vanilla ~12h)");
+            Logger.Msg($"  Wind resistance       : {Settings.instance.windResistancePercent}%");
+            Logger.Msg($"  Fire-start bonus      : +{Settings.instance.fireStartBonusPercent}%");
+            Logger.Msg($"  Indoor warmth bonus   : +{Settings.instance.indoorWarmthBonus}°C");
+            Logger.Msg($"  Outdoor warmth bonus  : +{Settings.instance.outdoorWarmthBonus}°C");
 
             if (SkillAdjustmentPresent)
             {
                 Logger.Msg(System.ConsoleColor.Cyan,
-                    "  [Совм.] Skill-Adjustment обнаружен.");
+                    "  [Compat] Skill-Adjustment detected.");
                 Logger.Msg(System.ConsoleColor.Cyan,
-                    "    • Бонус к розжигу (+" + Settings.instance.fireStartBonusPercent +
-                    "%) суммируется с базовыми шансами из Skill-Adjustment.");
+                    "    * Fire-start bonus (+" + Settings.instance.fireStartBonusPercent +
+                    "%) stacks additively on top of Skill-Adjustment base chances.");
                 Logger.Msg(System.ConsoleColor.Cyan,
-                    "    • Множитель горения топлива (x" + Settings.instance.burnDurationMultiplier +
-                    ") перемножается с бонусом длительности из Skill-Adjustment.");
+                    "    * Burn duration multiplier (x" + Settings.instance.burnDurationMultiplier +
+                    ") multiplies on top of Skill-Adjustment duration bonuses.");
             }
         }
 
         /// <summary>
-        /// Применяем бонус тепла к FireManager при загрузке игровой сцены.
+        /// Called by MelonLoader after each scene finishes initialising.
+        /// Re-applies all field-level overrides because the game may have
+        /// re-created its manager components for the new scene.
         /// </summary>
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
-            // Игровые сцены начинаются с "LV_" (локации) или "SANDBOX"
             if (!IsPlayableScene(sceneName))
                 return;
 
-            // Сбрасываем кэш при смене локации — ExperienceMode мог пересоздаться
+            Logger.Msg($"[Scene] '{sceneName}' — applying fire settings.");
+
+            // Reset cached vanilla values; ExperienceMode may have been recreated
             s_baseIndoorWarmth  = float.NaN;
             s_baseOutdoorWarmth = float.NaN;
 
@@ -68,7 +70,7 @@ namespace FireImprovementsMod
             ApplyMaxFireDuration();
         }
 
-        // Базовые (ванильные) значения — сохраняем при первом применении
+        // Cached vanilla values — recorded on first application per scene
         private static float s_baseIndoorWarmth  = float.NaN;
         private static float s_baseOutdoorWarmth = float.NaN;
 
@@ -82,30 +84,33 @@ namespace FireImprovementsMod
                 var emm = GameManager.GetExperienceModeManagerComponent();
                 if (emm == null)
                 {
-                    Logger?.Warning("[FireWarmth] ExperienceModeManager не найден.");
+                    Logger?.Warning("[FireWarmth] ExperienceModeManager not found.");
                     return;
                 }
 
                 ExperienceMode em = emm.GetCurrentExperienceMode();
                 if (em == null)
                 {
-                    Logger?.Warning("[FireWarmth] ExperienceMode не найден.");
+                    Logger?.Warning("[FireWarmth] ExperienceMode not found.");
                     return;
                 }
 
-                // Запоминаем ванильные значения один раз
+                // Record vanilla values once per scene so repeated calls don't stack
                 if (float.IsNaN(s_baseIndoorWarmth))  s_baseIndoorWarmth  = em.m_MinAirTemperatureFromFireIndoors;
                 if (float.IsNaN(s_baseOutdoorWarmth)) s_baseOutdoorWarmth = em.m_MinAirTemperatureFromFireOutdoors;
 
-                // Всегда считаем от базы — не накапливаемся при повторных вызовах
-                em.m_MinAirTemperatureFromFireIndoors  = s_baseIndoorWarmth  + Settings.instance.indoorWarmthBonus;
-                em.m_MinAirTemperatureFromFireOutdoors = s_baseOutdoorWarmth + Settings.instance.outdoorWarmthBonus;
+                float newIndoor  = s_baseIndoorWarmth  + Settings.instance.indoorWarmthBonus;
+                float newOutdoor = s_baseOutdoorWarmth + Settings.instance.outdoorWarmthBonus;
 
-                Logger?.Msg($"[FireWarmth] Тепло в помещении: {em.m_MinAirTemperatureFromFireIndoors}°C  (улица: {em.m_MinAirTemperatureFromFireOutdoors}°C)");
+                em.m_MinAirTemperatureFromFireIndoors  = newIndoor;
+                em.m_MinAirTemperatureFromFireOutdoors = newOutdoor;
+
+                Logger?.Msg($"[FireWarmth] Indoor  min fire temp: {s_baseIndoorWarmth}°C + {Settings.instance.indoorWarmthBonus} = {newIndoor}°C");
+                Logger?.Msg($"[FireWarmth] Outdoor min fire temp: {s_baseOutdoorWarmth}°C + {Settings.instance.outdoorWarmthBonus} = {newOutdoor}°C");
             }
             catch (Exception ex)
             {
-                Logger?.Warning($"[FireWarmth] Ошибка применения бонуса тепла: {ex.Message}");
+                Logger?.Warning($"[FireWarmth] Failed to apply warmth bonus: {ex.Message}");
             }
         }
 
@@ -113,28 +118,30 @@ namespace FireImprovementsMod
         {
             int maxHours = Settings.instance.maxFireDurationHours;
             if (maxHours == 0)
-                return;  // 0 = ванильное значение, не трогаем
+                return;  // 0 = leave vanilla value untouched
 
             try
             {
                 var fm = GameManager.GetFireManagerComponent();
                 if (fm == null)
                 {
-                    Logger?.Warning("[MaxDuration] FireManager не найден.");
+                    Logger?.Warning("[MaxDuration] FireManager not found.");
                     return;
                 }
 
+                float vanilla = fm.m_MaxDurationHoursOfFire;
                 fm.m_MaxDurationHoursOfFire = maxHours;
-                Logger?.Msg($"[MaxDuration] Максимальное время горения: {maxHours}ч");
+                Logger?.Msg($"[MaxDuration] Max fire duration: {vanilla}h (vanilla) -> {maxHours}h (modded)");
             }
             catch (Exception ex)
             {
-                Logger?.Warning($"[MaxDuration] Ошибка: {ex.Message}");
+                Logger?.Warning($"[MaxDuration] Failed: {ex.Message}");
             }
         }
 
-        // Playable scenes are e.g. "ChurchB_SANDBOX", "MysteryLake_SANDBOX", "WintermuteEp1_STORY" …
-        // Do NOT use StartsWith — scene names have the mode suffix, not a prefix.
+        // Playable scenes use the game mode as a suffix, e.g.:
+        //   "ChurchB_SANDBOX", "MysteryLake_SANDBOX", "WintermuteEp1_STORY"
+        // Do NOT use StartsWith — the mode token is at the end, not the start.
         private static bool IsPlayableScene(string name)
         {
             return name.Contains("SANDBOX")

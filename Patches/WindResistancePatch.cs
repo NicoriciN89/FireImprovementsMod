@@ -5,15 +5,14 @@ using UnityEngine;
 namespace FireImprovementsMod.Patches
 {
     /// <summary>
-    /// Снижает вероятность того, что ветер потушит огонь.
+    /// Reduces the chance that wind extinguishes a fire.
     ///
-    /// В текущей версии игры FireShouldBlowOutFromWind() —
-    /// метод экземпляра класса Fire (не статический GameManager).
+    /// FireShouldBlowOutFromWind() is an instance method on Fire (not a static GameManager call).
     ///
-    /// Prefix перехватывает вызов и бросает кубик:
-    ///   если выпало &lt; windResistancePercent — возвращаем false (огонь устоял).
-    ///   При 50% — костёр гаснет вдвое реже.
-    ///   При 100% — ветер не гасит огонь никогда.
+    /// The Prefix intercepts the call and rolls a dice:
+    ///   if roll &lt; windResistancePercent → return false (fire survives, original skipped).
+    ///   At 50%  — fires blow out half as often.
+    ///   At 100% — wind never extinguishes fires.
     /// </summary>
     [HarmonyPatch(typeof(Fire), nameof(Fire.FireShouldBlowOutFromWind))]
     internal class WindResistancePatch
@@ -22,16 +21,19 @@ namespace FireImprovementsMod.Patches
         {
             int resistance = Settings.instance.windResistancePercent;
             if (resistance <= 0)
-                return true;  // нет защиты — выполнить оригинальный метод
+                return true;  // no protection configured — run original method
 
-            // Бросаем кубик: если удача — огонь устоял
-            if (Random.value * 100f < resistance)
+            float roll = Random.value * 100f;
+
+            if (roll < resistance)
             {
+                // Fire resisted the wind this tick
+                Core.Logger?.Msg($"[WindResist] Wind blow-out blocked (roll {roll:F1} < {resistance}% resistance)");
                 __result = false;
-                return false;   // пропустить оригинальный метод
+                return false;  // skip original method
             }
 
-            return true;  // не повезло — выполнить оригинальный метод
+            return true;  // unlucky — let original method decide
         }
     }
 }

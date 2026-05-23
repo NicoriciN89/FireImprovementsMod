@@ -3,31 +3,32 @@ using HarmonyLib;
 
 namespace FireImprovementsMod.Patches
 {
-    // Совместимость со Skill-Adjustment:
-    //   SkillAdj патчит SkillsManager.Awake — изменяет m_BaseSuccessChance[] и
-    //   m_StartPercentIncrease[] для каждого уровня навыка Firestarting.
-    //   Наш Postfix добавляет плоский бонус УЖЕ ПОСЛЕ того, как CalculateFireStartSuccess
-    //   посчитал результат с учётом изменённых SkillAdj значений.
-    //   Порядок: SkillAdj настраивает скилл → ванильный расчёт использует эти данные
-    //            → наш Postfix добавляет flat бонус сверху.
-    //   Эффект: bonuses stack additively — это желаемое поведение.
+    // Skill-Adjustment compatibility:
+    //   Skill-Adjustment patches SkillsManager.Awake and edits m_BaseSuccessChance[] and
+    //   m_StartPercentIncrease[] for each Firestarting skill level.
+    //   Our Postfix adds a flat bonus AFTER CalculateFireStartSuccess has already run
+    //   with those modified values, so both mods' effects are fully applied.
+    //   Order: Skill-Adjustment configures the skill → vanilla calculation uses those values
+    //          → our Postfix adds our flat bonus on top.
+    //   Result: bonuses stack additively — intended behaviour.
+    //
+    // [HarmonyAfter] is not needed: Skill-Adjustment does not patch CalculateFireStartSuccess,
+    // so there is no execution-order conflict.
     /// <summary>
-    /// Добавляет плоский бонус к шансу успешного розжига.
+    /// Adds a flat percentage bonus to the fire-start success chance.
     ///
-    /// Как работает:
-    ///   FireManager.CalculateFireStartSuccess() возвращает шанс в диапазоне
-    ///   0–100 (целые проценты). Наш Postfix прибавляет бонус и ограничивает
-    ///   итог максимумом 100.
+    /// How it works:
+    ///   FireManager.CalculateFireStartSuccess() returns a chance in the range 0–100
+    ///   (whole percentages, NOT 0.0–1.0). Our Postfix adds the configured bonus and
+    ///   clamps the result to 100.
     ///
-    ///   Пример: базовый шанс 65% + бонус 10% = 75%.
+    ///   Example: base 65% + bonus 10% = 75%.
     ///
-    /// Параметры оригинального метода:
-    ///   FireStarterItem fireStarterItem   — зажигалка/спички/кресало
-    ///   FuelSourceItem  fuelItem          — топливо
-    ///   FireStarterItem tinderItem        — трут (может быть null)
+    /// Original method parameters:
+    ///   FireStarterItem fireStarterItem  — lighter / matches / firesteel
+    ///   FuelSourceItem  fuelItem         — fuel being used
+    ///   FireStarterItem tinderItem       — tinder (may be null)
     /// </summary>
-    // [HarmonyAfter] не нужен: SkillAdj не патчит CalculateFireStartSuccess,
-    // поэтому конфликта порядка нет.
     [HarmonyPatch(typeof(FireManager), nameof(FireManager.CalculateFireStartSuccess))]
     internal class FireStartSuccessPatch
     {
@@ -37,9 +38,11 @@ namespace FireImprovementsMod.Patches
             if (bonus <= 0)
                 return;
 
-            // Метод возвращает значение в диапазоне 0–100 (не 0.0–1.0),
-            // поэтому прибавляем бонус напрямую и ограничиваем сотней.
+            // The method returns 0–100, not 0.0–1.0, so add the bonus directly.
+            float before = __result;
             __result = System.Math.Min(__result + bonus, 100f);
+
+            Core.Logger?.Msg($"[FireStart] Base: {before:F1}% + bonus: {bonus}% = {__result:F1}%");
         }
     }
 }
