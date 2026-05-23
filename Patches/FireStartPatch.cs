@@ -1,6 +1,5 @@
 using Il2Cpp;
 using HarmonyLib;
-using UnityEngine;
 
 namespace FireImprovementsMod.Patches
 {
@@ -8,13 +7,11 @@ namespace FireImprovementsMod.Patches
     /// Добавляет плоский бонус к шансу успешного розжига.
     ///
     /// Как работает:
-    ///   FireManager.CalculateFireStartSuccess() вычисляет вероятность [0..1]
-    ///   успешного розжига, учитывая навык, инструменты, погоду и т.д.
+    ///   FireManager.CalculateFireStartSuccess() возвращает шанс в диапазоне
+    ///   0–100 (целые проценты). Наш Postfix прибавляет бонус и ограничивает
+    ///   итог максимумом 100.
     ///
-    ///   Наш Postfix прибавляет к результату наш бонус (в долях, 10% = 0.10)
-    ///   и зажимает итог в диапазоне [0..1].
-    ///
-    ///   Пример: базовый шанс 45% + бонус 10% = 55%.
+    ///   Пример: базовый шанс 65% + бонус 10% = 75%.
     ///
     /// Параметры оригинального метода:
     ///   FireStarterItem fireStarterItem   — зажигалка/спички/кресало
@@ -30,7 +27,9 @@ namespace FireImprovementsMod.Patches
             if (bonus <= 0)
                 return;
 
-            __result = Mathf.Clamp01(__result + bonus / 100f);
+            // Метод возвращает значение в диапазоне 0–100 (не 0.0–1.0),
+            // поэтому прибавляем бонус напрямую и ограничиваем сотней.
+            __result = System.Math.Min(__result + bonus, 100f);
         }
     }
 }

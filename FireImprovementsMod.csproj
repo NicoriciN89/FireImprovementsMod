@@ -55,11 +55,21 @@
     <PackageReference Include="STBlade.Modding.TLD.ModSettings" Version="1.9.0" />
   </ItemGroup>
 
-  <!-- Автоматически копировать DLL в папку Mods после сборки -->
+  <!-- JSON-файл локализации: включить в сборку и скопировать в выходную папку -->
+  <ItemGroup>
+    <None Include="localization.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Автоматически копировать DLL и localization.json в папку Mods после сборки -->
   <Target Name="CopyToMods" AfterTargets="Build">
     <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll"
           DestinationFolder="$(GameDir)\Mods"
           OverwriteReadOnlyFiles="true" />
-    <Message Text="Скопировано: $(AssemblyName).dll → $(GameDir)\Mods" Importance="High" />
+    <Copy SourceFiles="$(OutputPath)localization.json"
+          DestinationFolder="$(GameDir)\Mods"
+          OverwriteReadOnlyFiles="true" />
+    <Message Text="Скопировано: $(AssemblyName).dll + localization.json → $(GameDir)\Mods" Importance="High" />
   </Target>
 </Project>
