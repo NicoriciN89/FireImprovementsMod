@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>Latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <DebugType>embedded</DebugType>
+    <AssemblyName>FireImprovementsMod</AssemblyName>
+    <RootNamespace>FireImprovementsMod</RootNamespace>
+
+    <!-- Путь к игре (относительно папки проекта) -->
+    <GameDir>E:\games\TheLongDark</GameDir>
+    <MelonLoaderDir>$(GameDir)\MelonLoader</MelonLoaderDir>
+    <Il2CppDir>$(MelonLoaderDir)\Il2CppAssemblies</Il2CppDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- MelonLoader core -->
+    <Reference Include="MelonLoader">
+      <HintPath>$(MelonLoaderDir)\net6\MelonLoader.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(MelonLoaderDir)\net6\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppInterop.Runtime">
+      <HintPath>$(MelonLoaderDir)\net6\Il2CppInterop.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- TLD Il2Cpp game assemblies -->
+    <Reference Include="Il2CppAssembly-CSharp">
+      <HintPath>$(Il2CppDir)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppUnityEngine">
+      <HintPath>$(Il2CppDir)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppUnityEngine.CoreModule">
+      <HintPath>$(Il2CppDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Исходники ModSettings — только для изучения, не компилировать -->
+  <ItemGroup>
+    <Compile Remove="ModSettings-2.2.5\**" />
+  </ItemGroup>
+
+  <!-- ModSettings UI — через NuGet -->
+  <ItemGroup>
+    <PackageReference Include="STBlade.Modding.TLD.ModSettings" Version="1.9.0" />
+  </ItemGroup>
+
+  <!-- Автоматически копировать DLL в папку Mods после сборки -->
+  <Target Name="CopyToMods" AfterTargets="Build">
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll"
+          DestinationFolder="$(GameDir)\Mods"
+          OverwriteReadOnlyFiles="true" />
+    <Message Text="Скопировано: $(AssemblyName).dll → $(GameDir)\Mods" Importance="High" />
+  </Target>
+</Project>

@@ -1,0 +1,18 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+
+# ModSettings source (reference only, not compiled)
+ModSettings-2.2.5/
+
+# NuGet packages cache
+packages/
+*.nupkg
+
+# OS
+Thumbs.db
+.DS_Store
