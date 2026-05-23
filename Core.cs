@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 
 // ===== Метаданные мода =====
-[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.0", "Marvin")]
+[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.1", "Marvin")]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 [assembly: MelonColor(255, 255, 120, 20)]  // Оранжевый — цвет огня
 
@@ -13,7 +13,7 @@ namespace FireImprovementsMod
 {
     internal sealed class Core : MelonMod
     {
-        public const string Version = "1.2.0";
+        public const string Version = "1.2.1";
         internal static MelonLogger.Instance Logger;
 
         /// <summary>true если мод Skill-Adjustment загружен одновременно с нашим.</summary>
@@ -29,7 +29,7 @@ namespace FireImprovementsMod
                 .Any(m => m.Info.Name == "Skill-Adjustment");
 
             Logger.Msg(System.ConsoleColor.Yellow, "╔══════════════════════════════════════════╗");
-            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.2.0      ║");
+            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.2.1      ║");
             Logger.Msg(System.ConsoleColor.Yellow, "╚══════════════════════════════════════════╝");
             Logger.Msg($"  Топливо горит дольше x{Settings.instance.burnDurationMultiplier}");
             Logger.Msg($"  Макс. время горения: {Settings.instance.maxFireDurationHours}ч (было 12ч)");
@@ -133,13 +133,13 @@ namespace FireImprovementsMod
             }
         }
 
-        // Сбрасываем кэш базовых значений при загрузке новой сцены
+        // Playable scenes are e.g. "ChurchB_SANDBOX", "MysteryLake_SANDBOX", "WintermuteEp1_STORY" …
+        // Do NOT use StartsWith — scene names have the mode suffix, not a prefix.
         private static bool IsPlayableScene(string name)
         {
-            return name.StartsWith("LV_")
-                || name.StartsWith("SANDBOX")
-                || name == "MainMenu"
-                || name.StartsWith("WINTERMUTE");
+            return name.Contains("SANDBOX")
+                || name.Contains("WINTERMUTE")
+                || name.Contains("STORY");
         }
     }
 }
