@@ -2,6 +2,8 @@
 
 A MelonLoader mod for **The Long Dark** that makes fires more powerful and configurable.
 
+![Mod Settings](screenshot.png)
+
 All settings are adjustable in-game via the **Mod Settings** menu (no restart required).
 
 ## Features
