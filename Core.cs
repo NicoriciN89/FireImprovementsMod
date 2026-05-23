@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 
 // ===== Метаданные мода =====
-[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.1", "Marvin")]
+[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.1", "NnicolaeN")]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 [assembly: MelonColor(255, 255, 120, 20)]  // Оранжевый — цвет огня
 
