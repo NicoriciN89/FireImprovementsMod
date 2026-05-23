@@ -39,10 +39,7 @@ namespace FireImprovementsMod.Patches
                 return;
 
             // The method returns 0–100, not 0.0–1.0, so add the bonus directly.
-            float before = __result;
             __result = System.Math.Min(__result + bonus, 100f);
-
-            Core.Logger?.Msg($"[FireStart] Base: {before:F1}% + bonus: {bonus}% = {__result:F1}%");
         }
     }
 }

@@ -4,7 +4,7 @@ using Il2CppTLD.Gameplay;
 using System;
 using System.Linq;
 
-[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.2", "NnicolaeN")]
+[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.3", "NnicolaeN")]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 [assembly: MelonColor(255, 255, 120, 20)]  // orange — fire colour
 
@@ -12,7 +12,7 @@ namespace FireImprovementsMod
 {
     internal sealed class Core : MelonMod
     {
-        public const string Version = "1.2.2";
+        public const string Version = "1.2.3";
         internal static MelonLogger.Instance Logger;
 
         /// <summary>True if the Skill-Adjustment mod is loaded alongside ours.</summary>
@@ -28,7 +28,7 @@ namespace FireImprovementsMod
                 .Any(m => m.Info.Name == "Skill-Adjustment");
 
             Logger.Msg(System.ConsoleColor.Yellow, "╔══════════════════════════════════════════╗");
-            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.2.2      ║");
+            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.2.3      ║");
             Logger.Msg(System.ConsoleColor.Yellow, "╚══════════════════════════════════════════╝");
             Logger.Msg($"  Fuel burn multiplier  : x{Settings.instance.burnDurationMultiplier}");
             Logger.Msg($"  Max fire duration     : {Settings.instance.maxFireDurationHours}h (vanilla ~12h)");
@@ -59,8 +59,6 @@ namespace FireImprovementsMod
         {
             if (!IsPlayableScene(sceneName))
                 return;
-
-            Logger.Msg($"[Scene] '{sceneName}' — applying fire settings.");
 
             // Reset cached vanilla values; ExperienceMode may have been recreated
             s_baseIndoorWarmth  = float.NaN;
@@ -95,18 +93,26 @@ namespace FireImprovementsMod
                     return;
                 }
 
-                // Record vanilla values once per scene so repeated calls don't stack
-                if (float.IsNaN(s_baseIndoorWarmth))  s_baseIndoorWarmth  = em.m_MinAirTemperatureFromFireIndoors;
-                if (float.IsNaN(s_baseOutdoorWarmth)) s_baseOutdoorWarmth = em.m_MinAirTemperatureFromFireOutdoors;
+                // Record vanilla values once per scene so repeated calls don't stack.
+                // Guard against sentinel values (e.g. -1E+38) that the game uses when the
+                // warmth-from-fire feature is inactive in the current experience mode.
+                // In that case treat the base as 0 so the bonus still takes effect.
+                if (float.IsNaN(s_baseIndoorWarmth))
+                {
+                    float raw = em.m_MinAirTemperatureFromFireIndoors;
+                    s_baseIndoorWarmth = (raw < -1000f) ? 0f : raw;
+                }
+                if (float.IsNaN(s_baseOutdoorWarmth))
+                {
+                    float raw = em.m_MinAirTemperatureFromFireOutdoors;
+                    s_baseOutdoorWarmth = (raw < -1000f) ? 0f : raw;
+                }
 
                 float newIndoor  = s_baseIndoorWarmth  + Settings.instance.indoorWarmthBonus;
                 float newOutdoor = s_baseOutdoorWarmth + Settings.instance.outdoorWarmthBonus;
 
                 em.m_MinAirTemperatureFromFireIndoors  = newIndoor;
                 em.m_MinAirTemperatureFromFireOutdoors = newOutdoor;
-
-                Logger?.Msg($"[FireWarmth] Indoor  min fire temp: {s_baseIndoorWarmth}°C + {Settings.instance.indoorWarmthBonus} = {newIndoor}°C");
-                Logger?.Msg($"[FireWarmth] Outdoor min fire temp: {s_baseOutdoorWarmth}°C + {Settings.instance.outdoorWarmthBonus} = {newOutdoor}°C");
             }
             catch (Exception ex)
             {
@@ -129,9 +135,7 @@ namespace FireImprovementsMod
                     return;
                 }
 
-                float vanilla = fm.m_MaxDurationHoursOfFire;
                 fm.m_MaxDurationHoursOfFire = maxHours;
-                Logger?.Msg($"[MaxDuration] Max fire duration: {vanilla}h (vanilla) -> {maxHours}h (modded)");
             }
             catch (Exception ex)
             {

@@ -31,11 +31,7 @@ namespace FireImprovementsMod.Patches
             if (fuel == null)
                 return;
 
-            float before = fuel.m_BurnDurationHours;
             fuel.m_BurnDurationHours *= mult;
-            float after = fuel.m_BurnDurationHours;
-
-            Core.Logger?.Msg($"[FuelDuration] {__instance.name}: {before:F2}h x{mult} = {after:F2}h");
         }
     }
 }

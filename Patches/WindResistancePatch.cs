@@ -27,8 +27,6 @@ namespace FireImprovementsMod.Patches
 
             if (roll < resistance)
             {
-                // Fire resisted the wind this tick
-                Core.Logger?.Msg($"[WindResist] Wind blow-out blocked (roll {roll:F1} < {resistance}% resistance)");
                 __result = false;
                 return false;  // skip original method
             }
