@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- Укажи путь к своей установке The Long Dark -->
+    <!-- Скопируй этот файл в GameDir.props и замени путь -->
+    <GameDir>C:\Program Files (x86)\Steam\steamapps\common\TheLongDark</GameDir>
+  </PropertyGroup>
+</Project>

@@ -2,6 +2,9 @@
 bin/
 obj/
 
+# Local game path (each developer sets their own)
+GameDir.props
+
 # Visual Studio
 .vs/
 *.user

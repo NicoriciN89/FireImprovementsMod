@@ -59,7 +59,7 @@ namespace FireImprovementsMod
         // ───────────────────────────────────────────
         protected override void OnConfirm()
         {
-            // Применяем настройки сразу после нажатия «Применить»
+            base.OnConfirm();  // saves settings to disk
             Core.ApplyFireManagerWarmth();
             Core.ApplyMaxFireDuration();
         }

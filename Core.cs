@@ -4,7 +4,7 @@ using Il2CppTLD.Gameplay;
 using System;
 using System.Linq;
 
-[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.3", "NnicolaeN")]
+[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.4", "NnicolaeN")]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 [assembly: MelonColor(255, 255, 120, 20)]  // orange — fire colour
 
@@ -12,7 +12,7 @@ namespace FireImprovementsMod
 {
     internal sealed class Core : MelonMod
     {
-        public const string Version = "1.2.3";
+        public const string Version = "1.2.4";
         internal static MelonLogger.Instance Logger;
 
         /// <summary>True if the Skill-Adjustment mod is loaded alongside ours.</summary>
@@ -28,7 +28,7 @@ namespace FireImprovementsMod
                 .Any(m => m.Info.Name == "Skill-Adjustment");
 
             Logger.Msg(System.ConsoleColor.Yellow, "╔══════════════════════════════════════════╗");
-            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.2.3      ║");
+            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.2.4      ║");
             Logger.Msg(System.ConsoleColor.Yellow, "╚══════════════════════════════════════════╝");
             Logger.Msg($"  Fuel burn multiplier  : x{Settings.instance.burnDurationMultiplier}");
             Logger.Msg($"  Max fire duration     : {Settings.instance.maxFireDurationHours}h (vanilla ~12h)");
