@@ -25,7 +25,9 @@ namespace FireImprovementsMod.Patches
 
             float roll = Random.value * 100f;
 
-            if (roll < resistance)
+            // resistance >= 100 guard: Random.value can return exactly 1.0,
+            // making roll == 100 which would fail roll < 100 even at 100% setting.
+            if (resistance >= 100 || roll < resistance)
             {
                 __result = false;
                 return false;  // skip original method

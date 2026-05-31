@@ -43,7 +43,7 @@ The DLL is automatically copied to `Mods\` after a successful build.
 - **Burn duration** — patches `GearItem.Awake` to multiply `FuelSourceItem.m_BurnDurationHours` on every item instance.
 - **Max fire duration** — sets `FireManager.m_MaxDurationHoursOfFire` when a playable scene loads.
 - **Wind resistance** — prefix-patches `Fire.FireShouldBlowOutFromWind`, short-circuits with `false` based on a random roll.
-- **Fire start bonus** — postfix-patches `FireManager.CalculateFireStartSuccess`, clamps result to [0, 1].
+- **Fire start bonus** — postfix-patches `FireManager.CalculateFireStartSuccess`, clamps result to [0, 100].
 - **Warmth bonuses** — adds offsets to `ExperienceMode.m_MinAirTemperatureFromFireIndoors/Outdoors`.
 
 ## Languages

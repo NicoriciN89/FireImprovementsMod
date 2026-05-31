@@ -4,7 +4,7 @@ using Il2CppTLD.Gameplay;
 using System;
 using System.Linq;
 
-[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.4", "NnicolaeN")]
+[assembly: MelonInfo(typeof(FireImprovementsMod.Core), "FireImprovementsMod", "1.2.5", "NnicolaeN")]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 [assembly: MelonColor(255, 255, 120, 20)]  // orange — fire colour
 
@@ -12,7 +12,7 @@ namespace FireImprovementsMod
 {
     internal sealed class Core : MelonMod
     {
-        public const string Version = "1.2.4";
+        public const string Version = "1.2.5";
         internal static MelonLogger.Instance Logger;
 
         /// <summary>True if the Skill-Adjustment mod is loaded alongside ours.</summary>
@@ -28,7 +28,7 @@ namespace FireImprovementsMod
                 .Any(m => m.Info.Name == "Skill-Adjustment");
 
             Logger.Msg(System.ConsoleColor.Yellow, "╔══════════════════════════════════════════╗");
-            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.2.4      ║");
+            Logger.Msg(System.ConsoleColor.Yellow, "║      Fire Improvements Mod  v1.2.5      ║");
             Logger.Msg(System.ConsoleColor.Yellow, "╚══════════════════════════════════════════╝");
             Logger.Msg($"  Fuel burn multiplier  : x{Settings.instance.burnDurationMultiplier}");
             Logger.Msg($"  Max fire duration     : {Settings.instance.maxFireDurationHours}h (vanilla ~12h)");
@@ -60,9 +60,10 @@ namespace FireImprovementsMod
             if (!IsPlayableScene(sceneName))
                 return;
 
-            // Reset cached vanilla values; ExperienceMode may have been recreated
-            s_baseIndoorWarmth  = float.NaN;
-            s_baseOutdoorWarmth = float.NaN;
+            // Reset cached vanilla values; managers may have been recreated for the new scene
+            s_baseIndoorWarmth   = float.NaN;
+            s_baseOutdoorWarmth  = float.NaN;
+            s_baseMaxFireDuration = -1;
 
             ApplyFireManagerWarmth();
             ApplyMaxFireDuration();
@@ -71,10 +72,15 @@ namespace FireImprovementsMod
         // Cached vanilla values — recorded on first application per scene
         private static float s_baseIndoorWarmth  = float.NaN;
         private static float s_baseOutdoorWarmth = float.NaN;
+        private static float s_baseMaxFireDuration = -1f;  // -1 = not yet captured
 
         internal static void ApplyFireManagerWarmth()
         {
-            if (Settings.instance.indoorWarmthBonus == 0 && Settings.instance.outdoorWarmthBonus == 0)
+            // Early-exit only when nothing was ever applied (bases not yet captured).
+            // If bases ARE captured, we must still run so that setting bonuses to 0
+            // writes base+0 = vanilla back into the EM component.
+            if (Settings.instance.indoorWarmthBonus == 0 && Settings.instance.outdoorWarmthBonus == 0
+                && float.IsNaN(s_baseIndoorWarmth))
                 return;
 
             try
@@ -123,8 +129,12 @@ namespace FireImprovementsMod
         internal static void ApplyMaxFireDuration()
         {
             int maxHours = Settings.instance.maxFireDurationHours;
-            if (maxHours == 0)
-                return;  // 0 = leave vanilla value untouched
+
+            // Early-exit only when nothing was ever applied.
+            // If the base was captured, we must run so that maxHours=0 writes
+            // the vanilla value back (base) instead of leaving a stale override.
+            if (maxHours == 0 && s_baseMaxFireDuration < 0f)
+                return;
 
             try
             {
@@ -135,7 +145,10 @@ namespace FireImprovementsMod
                     return;
                 }
 
-                fm.m_MaxDurationHoursOfFire = maxHours;
+                if (s_baseMaxFireDuration < 0f)
+                    s_baseMaxFireDuration = fm.m_MaxDurationHoursOfFire;
+
+                fm.m_MaxDurationHoursOfFire = (maxHours == 0) ? s_baseMaxFireDuration : maxHours;
             }
             catch (Exception ex)
             {
