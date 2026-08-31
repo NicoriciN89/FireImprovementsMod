@@ -21,7 +21,7 @@ All settings are adjustable in-game via the **Mod Settings** menu (no restart re
 
 - [The Long Dark](https://store.steampowered.com/app/305620/) (tested on v2.55)
 - [MelonLoader](https://github.com/LavaGang/MelonLoader) v0.7.2+
-- [ModSettings](https://github.com/DigitalzombieTLD/ModSettings) (installed automatically via NuGet when building from source)
+- [ModSettings](https://github.com/DigitalzombieTLD/ModSettings) 
 
 ## Installation
 
